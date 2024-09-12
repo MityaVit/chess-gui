@@ -1,2 +1,2 @@
-Self-stufy project dedicated to NextJS, TypeScript, React.
+Self-study project on Next.JS, TypeScript, and React.
 Development is underway.
