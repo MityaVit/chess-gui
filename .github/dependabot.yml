@@ -1,0 +1,6 @@
+version: 2
+updates:
+  - package-ecosystem: "pnpm"
+    directory: "/chess-gui/"
+    schedule:
+      interval: "weekly"
