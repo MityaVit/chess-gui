@@ -4,21 +4,23 @@ import React from "react";
 import { Square } from "./square";
 import { DARK, LIGHT } from "../utils/colors";
 import { Piece } from "./piece";
-import { verticalAxis, horizontalAxis } from "../utils/axis";
+import { generalAxis } from "../types/axis";
+import GameSetup from "../types/gameSetup";
+import { PieceProps } from "./piece";
 
 interface ChessboardProps {
-    gamePosition: { [key: string]: { type: string, color: 'white' | 'black' } };
-    onSquareClick: (position: string, piece?: { type: string, color: 'white' | 'black'}) => void;
+    gamePosition: GameSetup;
+    onSquareClick: (position: number, piece?: PieceProps) => void;
 }
 
 export default function Chessboard({gamePosition, onSquareClick} : ChessboardProps) {
     let board = [];
 
-    for (let i = verticalAxis.length - 1; i >= 0; i--) {
-        for (let j = 0; j < horizontalAxis.length; j++) {
+    for (let i = generalAxis.length - 1; i >= 0; i--) {
+        for (let j = 0; j < generalAxis.length; j++) {
             const isBlack = (i + j) % 2 === 1;
             const squareColor = isBlack ? DARK : LIGHT;
-            const position = `${horizontalAxis[j]}${verticalAxis[i]}`;
+            const position = generalAxis[j] * 10 + generalAxis[i];
             const piece = gamePosition[position];
 
             board.push(

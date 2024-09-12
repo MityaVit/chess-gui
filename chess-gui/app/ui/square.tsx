@@ -5,7 +5,7 @@ import React from "react";
 interface SquareProps {
     color: string,
     children?: React.ReactNode,
-    position: string,
+    position: number,
     onClick?(): void
 }
 

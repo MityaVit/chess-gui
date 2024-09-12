@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 
 export interface PieceProps {
-    type: string,
+    type: 'pawn' | 'rook' | 'king' | 'queen' | 'knight' | 'bishop',
     color: 'white' | 'black',
 }
 
