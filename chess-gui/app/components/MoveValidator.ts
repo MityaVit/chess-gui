@@ -26,6 +26,7 @@ export const isMoveValid = (from: number, to: number, piece: PieceProps, gamePos
 
     // Pawns can't capture pieces in front of them, thus there is an additional check first
     const isDestinationValid = gamePosition[from].type === 'pawn' ? (!gamePosition[to]) : (!gamePosition[to] || gamePosition[to].color !== piece.color);
+    const isClear = isPathClear(from, to, gamePosition, piece);
 
     const validator = moveValidators[piece.type];
 
@@ -36,13 +37,45 @@ export const isMoveValid = (from: number, to: number, piece: PieceProps, gamePos
 
     const params: MoveParams = {from, to, isDestinationValid, gamePosition};
 
-    return validator ? validator(params) : false;
+    return validator ? validator(params) && isClear : false;
     
 }
 
 function getCoordinates (position: number) : [number, number] {
     return [Math.floor(position / 10), position % 10];
 }
+
+function isPathClear(from: number, to: number, gamePosition: GameSetup, piece: PieceProps): boolean {
+    // Knight doesn't care if the path is clear
+    if (piece.type === 'knight') {
+        return true;
+    }
+    else {
+        const [fromX, fromY] = getCoordinates(from);
+        const [toX, toY] = getCoordinates(to);
+
+        const deltaX = toX - fromX;
+        const deltaY = toY - fromY;
+
+        const stepX = deltaX === 0 ? 0 : deltaX / Math.abs(deltaX);
+        const stepY = deltaY === 0 ? 0 : deltaY / Math.abs(deltaY);
+
+        let currentX = fromX + stepX;
+        let currentY = fromY + stepY;
+
+        while (currentX !== toX || currentY !== toY) {
+            const currentPos = currentX * 10 + currentY;
+            if (gamePosition[currentPos]) {
+                return false;
+            }
+            currentX += stepX;
+            currentY += stepY;
+        }
+
+        return true;
+    }
+}
+
 
 function validatePawnMove({ from, to, isDestinationValid, gamePosition }: MoveParams): boolean {
     const [fromX, fromY] = getCoordinates(from);
