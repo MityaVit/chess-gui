@@ -14,7 +14,7 @@ interface ChessboardProps {
 }
 
 export default function Chessboard({gamePosition, onSquareClick} : ChessboardProps) {
-    let board = [];
+    const board = [];
 
     for (let i = generalAxis.length - 1; i >= 0; i--) {
         for (let j = 0; j < generalAxis.length; j++) {
