@@ -6,8 +6,8 @@ import GameSetup from "../types/gameSetup";
 interface MoveParams {
     from: number;
     to: number;
-    color: 'white' | 'black';
-    isPositionEmpty: boolean;
+    gamePosition: GameSetup;
+    isDestinationValid: boolean;
 }
 
 type MoveValidator = (params: MoveParams) => boolean;
@@ -23,7 +23,10 @@ const moveValidators: { [key: string]: MoveValidator } = {
 };
 
 export const isMoveValid = (from: number, to: number, piece: PieceProps, gamePosition: GameSetup) : boolean => {
-    const isPositionEmpty = !gamePosition[to];
+
+    // Pawns can't capture pieces in front of them, thus there is an additional check first
+    const isDestinationValid = gamePosition[from].type === 'pawn' ? (!gamePosition[to]) : (!gamePosition[to] || gamePosition[to].color !== piece.color);
+
     const validator = moveValidators[piece.type];
 
     if (!validator) {
@@ -31,7 +34,7 @@ export const isMoveValid = (from: number, to: number, piece: PieceProps, gamePos
         return false
     }
 
-    const params: MoveParams = {from, to, color: piece.color, isPositionEmpty}
+    const params: MoveParams = {from, to, isDestinationValid, gamePosition};
 
     return validator ? validator(params) : false;
     
@@ -41,59 +44,64 @@ function getCoordinates (position: number) : [number, number] {
     return [Math.floor(position / 10), position % 10];
 }
 
-function validatePawnMove({ from, to, color, isPositionEmpty }: MoveParams): boolean {
+function validatePawnMove({ from, to, isDestinationValid, gamePosition }: MoveParams): boolean {
     const [fromX, fromY] = getCoordinates(from);
     const [toX, toY] = getCoordinates(to);
     const deltaY = toY - fromY;
     const isVerticalMove = fromX === toX;
+    const isDiagonalMove = Math.abs(fromX - toX) === 1 && Math.abs(fromY - toY) === 1;
 
-    if (isVerticalMove && isPositionEmpty) {
-        if ((color === 'white' && deltaY === 1) || 
-            (color === 'black' && deltaY === -1)) {
+    if (isVerticalMove && isDestinationValid) {
+        if ((gamePosition[from].color === 'white' && deltaY === 1) || 
+            (gamePosition[from].color === 'black' && deltaY === -1)) {
             return true;
         }
 
-        const initialRow = color === 'white' ? 2 : 7;
+        const initialRow = gamePosition[from].color === 'white' ? 2 : 7;
         if (fromY === initialRow && Math.abs(deltaY) === 2) {
             return true;
         }
     }
 
+    if (isDiagonalMove && gamePosition[to] && gamePosition[to].color !== gamePosition[from].color) {
+        return true;
+    }
+
     return false;
 }
 
-function validateRookMove ({from, to, color, isPositionEmpty} : MoveParams) : boolean {
+function validateRookMove ({from, to, isDestinationValid} : MoveParams) : boolean {
     const [fromX, fromY] = getCoordinates(from);
     const [toX, toY] = getCoordinates(to);
 
     const isDiagonalMove = Math.abs(fromX - toX) === Math.abs(fromY - toY);
 
-    return !isDiagonalMove && isPositionEmpty;
+    return !isDiagonalMove && isDestinationValid;
 }
 
-function validateBishopMove ({from, to, color, isPositionEmpty} : MoveParams) : boolean {
+function validateBishopMove ({from, to, isDestinationValid} : MoveParams) : boolean {
     const [fromX, fromY] = getCoordinates(from);
     const [toX, toY] = getCoordinates(to);
     
     const isDiagonalMove = Math.abs(fromX - toX) === Math.abs(fromY - toY);
 
-    return isDiagonalMove && isPositionEmpty;
+    return isDiagonalMove && isDestinationValid;
 }
 
-function validateKingMove ({from, to, color, isPositionEmpty} : MoveParams) : boolean {
+function validateKingMove ({from, to, isDestinationValid} : MoveParams) : boolean {
     const [fromX, fromY] = getCoordinates(from);
     const [toX, toY] = getCoordinates(to);
 
     const isKingPattern = Math.abs(fromX - toX) <= 1 && Math.abs(fromY - toY) <= 1;
 
-    return isKingPattern && isPositionEmpty;
+    return isKingPattern && isDestinationValid;
 }
 
-function validateKnightMove ({from, to, color, isPositionEmpty} : MoveParams) : boolean {
+function validateKnightMove ({from, to, isDestinationValid} : MoveParams) : boolean {
     const [fromX, fromY] = getCoordinates(from);
     const [toX, toY] = getCoordinates(to);
 
     const isKnightPattern = (Math.abs(fromX - toX) === 2 && Math.abs(fromY - toY) === 1) || (Math.abs(fromX - toX) === 1 && Math.abs(fromY - toY) === 2);
 
-    return isKnightPattern && isPositionEmpty;
+    return isKnightPattern && isDestinationValid;
 }

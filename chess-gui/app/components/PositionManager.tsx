@@ -12,21 +12,26 @@ export default function PositionManager() {
     const [selectedPiece, setSelectedPiece] = useState<{position: number, piece?: PieceProps } | null>(null);
 
     const handleSquareClick = (position: number, piece?: PieceProps ) => {
-        if (selectedPiece && selectedPiece.piece && !piece) {
+        if (selectedPiece && selectedPiece.piece) {
             const from = selectedPiece.position;
             const to = position;
             if (isMoveValid(from, to, selectedPiece.piece, gamePosition)) {
                 const newGamePosition = { ...gamePosition };
-                newGamePosition[position] = selectedPiece.piece;
-                delete newGamePosition[from];
-                setGamePosition(newGamePosition);
+
+                if (!piece || selectedPiece.piece.color !== piece.color) {
+                    newGamePosition[position] = selectedPiece.piece;
+                    delete newGamePosition[from];
+                    setGamePosition(newGamePosition);
+                }
+
+                setSelectedPiece(null);
             }
             else {
                 console.log('not valid')
+                setSelectedPiece(null);
             }
-            setSelectedPiece(null);
         }
-        else if (piece) {
+        else if (!selectedPiece && piece) {
             setSelectedPiece({position, piece});
         }
     }
