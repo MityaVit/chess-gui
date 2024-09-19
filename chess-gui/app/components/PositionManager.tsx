@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../lib/store';
 import { MAKE_MOVE } from '../lib/features/gameSlice';
@@ -10,18 +10,36 @@ import { PieceProps } from '../ui/piece';
 
 const PositionManager: React.FC = () => {
     const dispatch = useDispatch();
-    const gamePosition = useSelector((state: RootState) => state.game.gamePosition); 
-    const currentTurn = useSelector((state: RootState) => state.game.currentTurn);
+    const gamePosition = useSelector((state: RootState) => state.game.gamePosition); // Current state of the game: pieces and their positions
+    const currentTurn = useSelector((state: RootState) => state.game.currentTurn); // State to control whose turn it is
     const [selectedPiece, setSelectedPiece] = useState<{ position: number; piece?: PieceProps } | null>(null);
+    const lastMove = useSelector((state: RootState) => state.game.moveHistory.slice(-1)[0]);
 
     const handleSquareClick = (position: number, piece?: PieceProps) => {
         // If a piece is selected
         if (selectedPiece && selectedPiece.piece) {
+            if (piece && selectedPiece.piece.color === piece.color) {
+                setSelectedPiece({position, piece});
+                return;
+            }
             const from = selectedPiece.position;
             const to = position;
 
-            if (isMoveValid(from, to, selectedPiece.piece, gamePosition)) {
+            if (isMoveValid(from, to, selectedPiece.piece, gamePosition, lastMove)) {
                 const newGamePosition = { ...gamePosition };
+
+                // En passant logic
+                if (selectedPiece.piece.type === 'pawn' &&
+                    lastMove &&
+                    lastMove.piece.type === 'pawn' &&
+                    selectedPiece.piece.color !== lastMove.piece.color) {
+                        const isWhite = selectedPiece.piece.color === 'white';
+                        const capturePosition = isWhite ? to - 1 : to + 1;
+                        delete newGamePosition[capturePosition];
+                    }
+
+                newGamePosition[to] = selectedPiece.piece;
+                delete newGamePosition[from];
 
                 // If a square is empty or there is a piece of another color
                 if (!piece || selectedPiece.piece.color !== piece.color) {
@@ -43,13 +61,6 @@ const PositionManager: React.FC = () => {
             setSelectedPiece({ position, piece });
         }
     };
-
-    // Temporary here for whatever reason
-    useEffect(() => {
-        if (selectedPiece) {
-            console.log(`${selectedPiece.piece?.type}, ${selectedPiece.position}`);
-        }
-    }, [selectedPiece]);
 
     return (
         <div>

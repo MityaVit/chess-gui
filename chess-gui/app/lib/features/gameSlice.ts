@@ -4,8 +4,8 @@ import { initialClassicalSetup } from "../../utils/InitialSetup";
 
 interface GameState {
     gamePosition: {[key: number]: PieceProps};
-    currentTurn: 'black' | 'white';
-    moveHistory: {from: number, to: number, color: 'black' | 'white'}[];
+    currentTurn: PieceProps["color"];
+    moveHistory: {from: number, to: number, piece: PieceProps}[];
 }
 
 const initialState: GameState = {
@@ -21,7 +21,8 @@ export const gameSlice = createSlice({
         MAKE_MOVE: (state, action: PayloadAction<{from: number; to: number; newGamePosition: {[key: number]: PieceProps};}>) => {
             const { from, to, newGamePosition } = action.payload;
             state.gamePosition = newGamePosition;
-            state.moveHistory.push({ from, to, color: state.currentTurn });
+            const movedPiece = newGamePosition[to];
+            state.moveHistory.push({ from, to, piece: movedPiece });
             state.currentTurn = state.currentTurn === 'white' ? 'black' : 'white';
         },
     },

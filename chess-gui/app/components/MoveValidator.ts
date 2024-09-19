@@ -10,7 +10,8 @@ interface MoveParams {
     isDestinationValid: boolean;
 }
 
-type MoveValidator = (params: MoveParams) => boolean;
+type MoveValidator = (params: MoveParams,
+    lastMove?: {from: number, to: number, piece: PieceProps}) => boolean;
 
 const moveValidators: { [key: string]: MoveValidator } = {
     'pawn': validatePawnMove,
@@ -22,10 +23,18 @@ const moveValidators: { [key: string]: MoveValidator } = {
     'knight': validateKnightMove,
 };
 
-export const isMoveValid = (from: number, to: number, piece: PieceProps, gamePosition: GameSetup) : boolean => {
+export const isMoveValid = (from: number,
+    to: number,
+    piece: PieceProps,
+    gamePosition: GameSetup,
+    lastMove?: {from: number, to: number, piece: PieceProps}) : boolean => {
 
     // Pawns can't capture pieces in front of them, thus there is an additional check first
-    const isDestinationValid = gamePosition[from].type === 'pawn' ? (!gamePosition[to]) : (!gamePosition[to] || gamePosition[to].color !== piece.color);
+    const isDestinationValid = gamePosition[from].type === 'pawn' ?
+        (!gamePosition[to]) :
+        (!gamePosition[to] ||
+        gamePosition[to].color !== piece.color);
+
     const isClear = isPathClear(from, to, gamePosition, piece);
 
     const validator = moveValidators[piece.type];
@@ -37,7 +46,7 @@ export const isMoveValid = (from: number, to: number, piece: PieceProps, gamePos
 
     const params: MoveParams = {from, to, isDestinationValid, gamePosition};
 
-    return validator ? validator(params) && isClear : false;
+    return validator ? validator(params, lastMove) && isClear : false;
     
 }
 
@@ -71,37 +80,53 @@ function isPathClear(from: number, to: number, gamePosition: GameSetup, piece: P
             currentX += stepX;
             currentY += stepY;
         }
-
         return true;
     }
 }
 
 
-function validatePawnMove({ from, to, isDestinationValid, gamePosition }: MoveParams): boolean {
-    const [fromX, fromY] = getCoordinates(from);
-    const [toX, toY] = getCoordinates(to);
-    const deltaY = toY - fromY;
-    const isVerticalMove = fromX === toX;
-    const isDiagonalMove = Math.abs(fromX - toX) === 1 && Math.abs(fromY - toY) === 1;
+function validatePawnMove({
+    from, to, isDestinationValid, gamePosition }: MoveParams,
+    lastMove?: { from: number, to: number, piece: PieceProps }): boolean {
+            
+        const [fromX, fromY] = getCoordinates(from);
+        const [toX, toY] = getCoordinates(to);
+        const deltaY = toY - fromY;
+        const isVerticalMove = fromX === toX;
+        const isDiagonalMove = Math.abs(fromX - toX) === 1 && Math.abs(fromY - toY) === 1;
 
-    if (isVerticalMove && isDestinationValid) {
-        if ((gamePosition[from].color === 'white' && deltaY === 1) || 
-            (gamePosition[from].color === 'black' && deltaY === -1)) {
-            return true;
+        // Regular pawn's move
+        if (isVerticalMove && isDestinationValid) {
+            if ((gamePosition[from].color === 'white' && deltaY === 1) || 
+                (gamePosition[from].color === 'black' && deltaY === -1)) {
+                return true;
+            }
+
+            const initialRow = gamePosition[from].color === 'white' ? 2 : 7;
+            if (fromY === initialRow && Math.abs(deltaY) === 2) {
+                return true;
+            }
         }
 
-        const initialRow = gamePosition[from].color === 'white' ? 2 : 7;
-        if (fromY === initialRow && Math.abs(deltaY) === 2) {
-            return true;
+        // Opponent's pawn capture logic
+        if (isDiagonalMove && gamePosition[to] && gamePosition[to].color !== gamePosition[from].color) {
+            if ((gamePosition[from].color === 'white' && deltaY === 1) ||
+                (gamePosition[from].color === 'black' && deltaY === -1)) {
+                    return true;
+                }
         }
+
+        // En passant logic
+        if (isDiagonalMove && !gamePosition[to] && lastMove && lastMove.piece.type === 'pawn') {
+            const pawnDirection = gamePosition[from].color === 'white' ? 1 : -1;
+
+            if (Math.abs(lastMove.to - lastMove.from) === 2 && lastMove.to === to - pawnDirection) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    if (isDiagonalMove && gamePosition[to] && gamePosition[to].color !== gamePosition[from].color) {
-        return true;
-    }
-
-    return false;
-}
 
 function validateRookMove ({from, to, isDestinationValid} : MoveParams) : boolean {
     const [fromX, fromY] = getCoordinates(from);
@@ -134,7 +159,11 @@ function validateKnightMove ({from, to, isDestinationValid} : MoveParams) : bool
     const [fromX, fromY] = getCoordinates(from);
     const [toX, toY] = getCoordinates(to);
 
-    const isKnightPattern = (Math.abs(fromX - toX) === 2 && Math.abs(fromY - toY) === 1) || (Math.abs(fromX - toX) === 1 && Math.abs(fromY - toY) === 2);
+    const isKnightPattern = (Math.abs(fromX - toX) === 2 &&
+        Math.abs(fromY - toY) === 1) ||
+        (Math.abs(fromX - toX) === 1
+        && Math.abs(fromY - toY) === 2);
 
     return isKnightPattern && isDestinationValid;
 }
+
