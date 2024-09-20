@@ -8,7 +8,7 @@ export interface PieceProps {
     color: 'white' | 'black',
 }
 
-export const Piece: React.FC<PieceProps> = ({ type, color }) => {
+export const Piece: React.FC<PieceProps> = React.memo(({ type, color }) => {
     return(
         <div>
             <Image
@@ -18,5 +18,5 @@ export const Piece: React.FC<PieceProps> = ({ type, color }) => {
                 alt={`${color} ${type} piece`}
              />
         </div>
-    )
-}
+    );
+});

@@ -14,7 +14,7 @@ const initialState: GameState = {
     moveHistory: []
 }
 
-export const gameSlice = createSlice({
+const gameSlice = createSlice({
     name: 'game',
     initialState,
     reducers: {

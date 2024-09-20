@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Square } from "./square";
 import { DARK, LIGHT } from "../utils/colors";
 import { Piece } from "./piece";
@@ -13,37 +13,45 @@ interface ChessboardProps {
     onSquareClick: (position: number, piece?: PieceProps) => void;
 }
 
-export default function Chessboard({gamePosition, onSquareClick} : ChessboardProps) {
-    const board = [];
+const Chessboard = React.memo(({gamePosition, onSquareClick} : ChessboardProps) => {
+    const board = useMemo(() => {
+        const squares = [];
+        const axisLength = generalAxis.length;
+        for (let i = axisLength - 1; i >= 0; i--) {
+            for (let j = 0; j < axisLength; j++) {
+                const isDark = (i + j) % 2 === 1;
+                const squareColor = isDark ? DARK : LIGHT;
+                const position = generalAxis[j] * 10 + generalAxis[i];
+                const piece = gamePosition[position];
+                const handleClick = () => onSquareClick(position, piece);
 
-    for (let i = generalAxis.length - 1; i >= 0; i--) {
-        for (let j = 0; j < generalAxis.length; j++) {
-            const isBlack = (i + j) % 2 === 1;
-            const squareColor = isBlack ? DARK : LIGHT;
-            const position = generalAxis[j] * 10 + generalAxis[i];
-            const piece = gamePosition[position];
-
-            board.push(
-                <Square
-                    key={`${i}-${j}`}
-                    color={squareColor}
-                    position={position}
-                    onClick={() => onSquareClick(position, piece)}
-                >
-                    {piece && (
-                        <Piece
-                            type={piece.type}
-                            color={piece.color}
-                        />
-                    )}
-                </Square>
-            );
+                squares.push(
+                    <Square
+                        key={`${i}-${j}`}
+                        color={squareColor}
+                        position={position}
+                        onClick={handleClick}
+                    >
+                        {piece && (
+                            <Piece
+                                type={piece.type}
+                                color={piece.color}
+                            />
+                        )}
+                    </Square>
+                );
+            }
         }
-    }
+        return squares;
+    }, [gamePosition, onSquareClick]);
+
+    
 
     return (
         <div className="grid grid-cols-8 relative shadow-xl ring-1 ring-gray-900/5 mx-auto my-auto w-[600px] h-[600px]">
             {board}
         </div>
     );
-}
+});
+
+export default Chessboard;
