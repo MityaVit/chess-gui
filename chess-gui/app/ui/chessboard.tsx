@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Square } from "./square";
 import { DARK, LIGHT } from "../utils/colors";
 import { Piece } from "./piece";

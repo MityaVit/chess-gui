@@ -54,7 +54,7 @@ const PositionManager: React.FC = () => {
         } else if (!selectedPiece && piece && piece.color === currentTurn) {
             setSelectedPiece({ position, piece });
         }
-    }, [selectedPiece, gamePosition, currentTurn]);
+    }, [selectedPiece, gamePosition, currentTurn, dispatch, lastMove]);
 
     return (
         <div>
