@@ -19,3 +19,5 @@ export const Square: React.FC<SquareProps> = React.memo(({ color, children, onCl
         </div>
     );
 });
+
+Square.displayName = 'Square';

@@ -20,3 +20,5 @@ export const Piece: React.FC<PieceProps> = React.memo(({ type, color }) => {
         </div>
     );
 });
+
+Piece.displayName ='Piece';
